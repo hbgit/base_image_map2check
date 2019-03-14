@@ -1,6 +1,18 @@
+############################################################
+# Dockerfile to build map2check build environment container images
+# based on Ubuntu
+# Usage:
+# 
+#  By gitclone https://github.com/hbgit/Map2Check:
+#   $ docker build -t hrocha/base_mapdevel --no-cache -f Dockerfile .
+#   $ docker run -it --name=base_build_mapdevel hrocha/base_mapdevel /bin/bash
+############################################################
+
+
+# Base image with LLVM 6.0 builded
 FROM herberthb/dev-llvm_6.0:first
 
-# Metadata indicating an image maintainer.
+# Image maintainer.
 MAINTAINER <herberthb12@gmail.com>
 
 # Update the repository sources list
