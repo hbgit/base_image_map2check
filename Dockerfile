@@ -1,16 +1,17 @@
 ############################################################
 # Dockerfile to build map2check build environment container images
-# based on Ubuntu
+# based on herberthb/dev-llvm_6.0:first image from:
+# https://github.com/hbgit/dev-llvm_6.0
+#
 # Usage:
-# 
+#
 #  By gitclone https://github.com/hbgit/Map2Check:
-#   $ docker build -t hrocha/base_mapdevel --no-cache -f Dockerfile .
-#   $ docker run -it --name=base_build_mapdevel hrocha/base_mapdevel /bin/bash
+#   $ docker build -t herberthb/base-image-map2check:latest --no-cache -f Dockerfile .
+#   $ docker run -it --name=base_build_mapdevel herberthb/base-image-map2check:latest /bin/bash
 ############################################################
 
-
 # Base image with LLVM 6.0 builded
-FROM herberthb/dev-llvm_6.0:first
+FROM hrocha/dev-llvm_6.0:first
 
 # Image maintainer.
 MAINTAINER <herberthb12@gmail.com>
@@ -24,7 +25,7 @@ RUN mkdir -p /deps/src/
 WORKDIR /deps/src/
 
 # Download KleeUCLibC:
-RUN git clone --branch klee_0_9_29 https://github.com/klee/klee-uclibc.git 
+RUN git clone --branch klee_0_9_29 https://github.com/klee/klee-uclibc.git
 
 # Download MiniSAT:
 RUN git clone  --branch releases/2.2.1 https://github.com/stp/minisat.git
@@ -99,7 +100,7 @@ RUN mkdir build
 WORKDIR /deps/src/klee/build
 RUN cmake -DENABLE_SOLVER_Z3=ON -DZ3_LIBRARIES=/deps/install/z3/lib/libz3.so -DZ3_INCLUDE_DIRS=/deps/install/z3/include -DENABLE_SOLVER_STP=ON -DKLEE_RUNTIME_BUILD_TYPE=Release -DENABLE_POSIX_RUNTIME=ON -DENABLE_KLEE_UCLIBC=ON -DKLEE_UCLIBC_PATH=/deps/install/klee_uclib/usr/x86_64-linux-uclibc/usr/ -DCMAKE_BUILD_TYPE=Release -DLLVM_CONFIG_BINARY=$LLVM_DIR_BASE/bin/llvm-config \
      -DENABLE_TCMALLOC=OFF -DENABLE_SYSTEM_TESTS=OFF -DENABLE_UNIT_TESTS=OFF -DCMAKE_INSTALL_PREFIX:PATH=/deps/install/klee -G Ninja ..
-RUN ninja install    
+RUN ninja install
 
 # CRAB
 RUN mkdir -p /deps/install/crab
