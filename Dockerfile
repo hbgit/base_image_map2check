@@ -18,7 +18,7 @@ MAINTAINER <herberthb12@gmail.com>
 
 # Update the repository sources list
 RUN apt-get update
-RUN apt install -y git libncurses5-dev zlib1g-dev bison flex  libboost-all-dev libgmp-dev libmpfr-dev
+RUN apt install -y curl git libcap-dev python-pip unzip libtcmalloc-minimal4 libgoogle-perftools-dev libncurses5-dev zlib1g-dev bison flex libboost-all-dev libgmp-dev libmpfr-dev sqlite3 libsqlite3-dev
 
 # DOWNLOAD
 RUN mkdir -p /deps/src/
@@ -34,7 +34,7 @@ RUN git clone  --branch releases/2.2.1 https://github.com/stp/minisat.git
 RUN git clone --branch 2.1.2 https://github.com/stp/stp.git
 
 # Download Z3:
-RUN git clone --branch z3-4.4.1 https://github.com/Z3Prover/z3.git
+RUN git clone --branch z3-4.8.4 https://github.com/Z3Prover/z3.git
 
 # Download LibFuzzer:
 RUN svn co http://llvm.org/svn/llvm-project/compiler-rt/trunk/lib/fuzzer
@@ -108,6 +108,15 @@ RUN mkdir -p /deps/src/crab-llvm/build
 WORKDIR /deps/src/crab-llvm/build
 ENV CXX ""
 ENV CC ""
+RUN apt install -y g++-5 gcc-5
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 10
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 20
+RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 10
+RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 20
+RUN update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30
+RUN update-alternatives --set cc /usr/bin/gcc
+RUN update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30
+RUN update-alternatives --set c++ /usr/bin/g++
 
 RUN cmake -DLLVM_DIR=/llvm/release/llvm600/lib/cmake/llvm/ -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_PROGRAM_PATH=/usr/bin -DCMAKE_INSTALL_PREFIX=/deps/install/crab -DUSE_LDD=ON -DUSE_APRON=ON ../
 RUN cmake --build . --target extra && cmake ..
