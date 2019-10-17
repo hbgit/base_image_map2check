@@ -133,8 +133,6 @@ RUN cmake --build . --target ldd && cmake ..
 RUN cmake --build . --target apron && cmake ..
 RUN cmake --build . --target install
 
-
-
 ############ LLVM environment variables:
 ENV LLVM_DIR_BASE /llvm/release/llvm600
 ENV LLVM_VERSION 6.0.0
@@ -155,4 +153,4 @@ RUN ninja install
 
 
 # Cleaning Source Files
-RUN rm -rf /deps/src
+#RUN rm -rf /deps/src
