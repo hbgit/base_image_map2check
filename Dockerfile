@@ -25,7 +25,7 @@ RUN mkdir -p /deps/src/
 WORKDIR /deps/src/
 
 # Download KleeUCLibC:
-RUN git clone --branch klee_0_9_29 https://github.com/hbgit/klee-uclibc.git
+RUN git clone --branch klee_uclibc_v1.2 https://github.com/klee/klee-uclibc.git
 
 # Download MiniSAT:
 RUN git clone  --branch releases/2.2.1 https://github.com/stp/minisat.git
@@ -41,10 +41,10 @@ RUN svn co http://llvm.org/svn/llvm-project/compiler-rt/trunk/lib/fuzzer
 
 # Download MetaSMT
 RUN git clone -b v4.rc2 https://github.com/hbgit/metaSMT.git
-#RUN git clone -b development https://github.com/agra-uni-bremen/metaSMT.git
+##RUN git clone -b development https://github.com/agra-uni-bremen/metaSMT.git
 
 # Download Klee:
-RUN git clone https://github.com/klee/klee.git
+RUN git clone --branch v2.1 https://github.com/klee/klee.git
 
 # Download Crab:
 RUN git clone --branch dev-llvm-6.0 https://github.com/hbgit/crab-llvm.git
