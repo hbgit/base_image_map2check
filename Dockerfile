@@ -29,7 +29,7 @@ RUN apt install -y curl \
 RUN mkdir -p /deps/src/
 WORKDIR /deps/src/
 
-# Download KleeUCLibC:
+## Download KleeUCLibC:
 RUN git clone --branch klee_uclibc_v1.2 https://github.com/klee/klee-uclibc.git
 
 # Download MiniSAT:
@@ -82,7 +82,12 @@ WORKDIR /deps/src/stp
 RUN mkdir -p /deps/install/stp
 RUN mkdir BUILD
 WORKDIR /deps/src/stp/BUILD
-RUN cmake -DBUILD_SHARED_LIBS=OFF -DENABLE_PYTHON_INTERFACE=OFF -DSTP_TIMESTAMPS:BOOL="OFF" -DCMAKE_CXX_FLAGS_RELEASE=-O2 -DCMAKE_C_FLAGS_RELEASE=-O2 -DMINISAT_LIBRARY=/deps/install/minisat/lib/libminisat.a -DMINISAT_INCLUDE_DIR=/deps/install/minisat/include/ -DCMAKE_INSTALL_PREFIX:PATH=/deps/install/stp -G Ninja ..
+RUN cmake -DBUILD_SHARED_LIBS=OFF \
+    -DENABLE_PYTHON_INTERFACE=OFF -DSTP_TIMESTAMPS:BOOL="OFF" \
+    -DCMAKE_CXX_FLAGS_RELEASE=-O2 -DCMAKE_C_FLAGS_RELEASE=-O2 \
+    -DMINISAT_LIBRARY=/deps/install/minisat/lib/libminisat.a \
+    -DMINISAT_INCLUDE_DIR=/deps/install/minisat/include/ \
+    -DCMAKE_INSTALL_PREFIX:PATH=/deps/install/stp -G Ninja ..
 RUN ninja install
 
 # Z3
@@ -111,7 +116,9 @@ RUN update-alternatives --set c++ /usr/bin/g++
 WORKDIR /deps/src/metaSMT
 RUN mkdir -p /deps/install/metasmt
 RUN git clone https://github.com/agra-uni-bremen/dependencies.git
-RUN ./bootstrap.sh --deps deps/ -j 8 --academic -m RELEASE build/ --install /deps/install/metasmt/ --cmake ./ -DmetaSMT_ENABLE_TESTS=off
+RUN ./bootstrap.sh --deps deps/ -j 8 \
+    --academic -m RELEASE build/ --install /deps/install/metasmt/ \
+    --cmake ./ -DmetaSMT_ENABLE_TESTS=off
 #RUN cd /deps/src/metaSMT
 RUN make
 RUN make install
@@ -124,7 +131,13 @@ WORKDIR /deps/src/crab-llvm/build
 #RUN ls
 #RUN pwd
 
-RUN cmake -DLLVM_DIR=usr/lib/llvm-8/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_PROGRAM_PATH=/usr/bin -DCMAKE_INSTALL_PREFIX=/deps/install/crab -DUSE_LDD=ON -DUSE_APRON=ON ../
+RUN cmake -GNinja \
+	-DLLVM_DIR=/usr/lib/llvm-8/lib/cmake/llvm/ \
+	-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++-5 \
+	-DCMAKE_PROGRAM_PATH=/usr/bin \
+	-DCMAKE_INSTALL_PREFIX=/deps/install/crab \
+	-DCRAB_USE_LDD=ON -DCRAB_USE_APRON=ON ../
+
 RUN cmake --build . --target extra && cmake ..
 RUN cmake --build . --target crab && cmake ..
 RUN cmake --build . --target ldd && cmake ..
@@ -144,8 +157,16 @@ RUN mkdir -p /deps/install/klee
 RUN mkdir build
 
 WORKDIR /deps/src/klee/build
-RUN cmake -DENABLE_SOLVER_METASMT=ON -DmetaSMT_DIR=/deps/install/metasmt/share/metaSMT/ -DENABLE_SOLVER_Z3=ON -DZ3_LIBRARIES=/deps/install/z3/lib/libz3.so -DZ3_INCLUDE_DIRS=/deps/install/z3/include -DENABLE_SOLVER_STP=ON -DKLEE_RUNTIME_BUILD_TYPE=Release -DENABLE_POSIX_RUNTIME=ON -DENABLE_KLEE_UCLIBC=ON -DKLEE_UCLIBC_PATH=/deps/install/klee_uclib/usr/x86_64-linux-uclibc/usr/ -DCMAKE_BUILD_TYPE=Release -DLLVM_CONFIG_BINARY=/usr/bin/llvm-config-8 \
-     -DENABLE_TCMALLOC=OFF -DENABLE_SYSTEM_TESTS=OFF -DENABLE_UNIT_TESTS=OFF -DCMAKE_INSTALL_PREFIX:PATH=/deps/install/klee -G Ninja ..
+RUN cmake -DENABLE_SOLVER_METASMT=ON \
+    -DmetaSMT_DIR=/deps/install/metasmt/share/metaSMT/ \
+    -DENABLE_SOLVER_Z3=ON -DZ3_LIBRARIES=/deps/install/z3/lib/libz3.so \
+    -DZ3_INCLUDE_DIRS=/deps/install/z3/include -DENABLE_SOLVER_STP=ON \
+    -DKLEE_RUNTIME_BUILD_TYPE=Release -DENABLE_POSIX_RUNTIME=ON \
+    -DENABLE_KLEE_UCLIBC=ON -DKLEE_UCLIBC_PATH=/deps/install/klee_uclib/usr/x86_64-linux-uclibc/usr/ \
+    -DCMAKE_BUILD_TYPE=Release -DLLVM_CONFIG_BINARY=/usr/bin/llvm-config-8 \
+    -DENABLE_TCMALLOC=OFF -DENABLE_SYSTEM_TESTS=OFF -DENABLE_UNIT_TESTS=OFF \
+    -DCMAKE_INSTALL_PREFIX:PATH=/deps/install/klee -G Ninja ..
+
 RUN ninja install
 
 
