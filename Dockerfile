@@ -1,24 +1,29 @@
 ############################################################
 # Dockerfile to build map2check build environment container images
-# based on herberthb/dev-llvm_6.0:first image from:
-# https://github.com/hbgit/dev-llvm_6.0
+# based on herberthb/llvm-docker-dev:v8 image from:
+# https://github.com/hbgit/llvm-docker-dev.git
 #
 # Usage:
 #
 #  By gitclone https://github.com/hbgit/Map2Check:
-#   $ docker build -t herberthb/base-image-map2check:latest --no-cache -f Dockerfile .
-#   $ docker run -it --name=base_build_mapdevel herberthb/base-image-map2check:latest /bin/bash
+#   $ docker build -t herberthb/base-image-map2check:v8 --no-cache -f Dockerfile .
+#   $ docker run -it --name=base_build_mapdevel herberthb/base-image-map2check:v8 /bin/bash
 ############################################################
 
 # Base image with LLVM 6.0 builded
-FROM herberthb/dev-llvm_6.0:first
+FROM herberthb/llvm-docker-dev:v8
 
 # Image maintainer.
 MAINTAINER <herberthb12@gmail.com>
 
 # Update the repository sources list
 RUN apt-get update
-RUN apt install -y curl git libcap-dev python-pip unzip libtcmalloc-minimal4 libgoogle-perftools-dev libncurses5-dev zlib1g-dev bison flex libboost-all-dev libgmp-dev libmpfr-dev sqlite3 libsqlite3-dev libbz2-dev gperf
+RUN apt install -y curl \
+     git libcap-dev python-pip unzip \
+     libtcmalloc-minimal4 libgoogle-perftools-dev \
+     libncurses5-dev zlib1g-dev bison flex \
+     libboost-all-dev libgmp-dev libmpfr-dev \
+     sqlite3 libsqlite3-dev libbz2-dev gperf
 
 # DOWNLOAD
 RUN mkdir -p /deps/src/
@@ -36,9 +41,6 @@ RUN git clone --branch 2.1.2 https://github.com/stp/stp.git
 # Download Z3:
 RUN git clone --branch z3-4.8.4 https://github.com/Z3Prover/z3.git
 
-# Download LibFuzzer:
-RUN svn co http://llvm.org/svn/llvm-project/compiler-rt/trunk/lib/fuzzer
-
 # Download MetaSMT
 RUN git clone -b v4.rc2 https://github.com/hbgit/metaSMT.git
 ##RUN git clone -b development https://github.com/agra-uni-bremen/metaSMT.git
@@ -47,20 +49,19 @@ RUN git clone -b v4.rc2 https://github.com/hbgit/metaSMT.git
 RUN git clone --branch v2.1 https://github.com/klee/klee.git
 
 # Download Crab:
-RUN git clone --branch dev-llvm-6.0 https://github.com/hbgit/crab-llvm.git
+RUN git clone --branch llvm-8.0 https://github.com/seahorn/crab-llvm.git
 
 # BUILD/INSTALL:
 # LLVM environment variables:
-ENV LLVM_DIR_BASE /llvm/release/llvm600
-ENV LLVM_VERSION 6.0.0
+ENV LLVM_VERSION 8.0.0
 
-ENV LLVM_DIR $LLVM_DIR_BASE/lib/cmake/llvm
-ENV CXX $LLVM_DIR_BASE/bin/clang++
-ENV CC $LLVM_DIR_BASE/bin/clang
+ENV LLVM_DIR usr/lib/llvm-8/cmake
+ENV CXX /usr/bin/clang++-8
+ENV CC /usr/bin/clang-8
 
 # KleeUCLibC
 WORKDIR /deps/src/klee-uclibc
-RUN ./configure --make-llvm-lib --with-llvm-config=$LLVM_DIR_BASE/bin/llvm-config
+RUN ./configure --make-llvm-lib --with-llvm-config=/usr/bin/llvm-config-8
 RUN make -j8
 
 RUN mkdir -p /deps/install/klee_uclib
@@ -91,10 +92,7 @@ RUN CXX=g++ CC=gcc python scripts/mk_make.py --prefix=/deps/install/z3
 RUN cd build && make -j8 && make install
 
 # LibFuzzer
-WORKDIR /deps/src/fuzzer
-RUN mkdir -p /deps/install/fuzzer
-RUN ./build.sh
-RUN cp libFuzzer.a /deps/install/fuzzer
+RUN cp /usr/lib/llvm-8/lib/libFuzzer.a /deps/install/fuzzer
 
 
 ENV CXX ""
@@ -126,7 +124,7 @@ WORKDIR /deps/src/crab-llvm/build
 #RUN ls
 #RUN pwd
 
-RUN cmake -DLLVM_DIR=/llvm/release/llvm600/lib/cmake/llvm/ -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_PROGRAM_PATH=/usr/bin -DCMAKE_INSTALL_PREFIX=/deps/install/crab -DUSE_LDD=ON -DUSE_APRON=ON ../
+RUN cmake -DLLVM_DIR=usr/lib/llvm-8/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_PROGRAM_PATH=/usr/bin -DCMAKE_INSTALL_PREFIX=/deps/install/crab -DUSE_LDD=ON -DUSE_APRON=ON ../
 RUN cmake --build . --target extra && cmake ..
 RUN cmake --build . --target crab && cmake ..
 RUN cmake --build . --target ldd && cmake ..
@@ -134,12 +132,11 @@ RUN cmake --build . --target apron && cmake ..
 RUN cmake --build . --target install
 
 ############ LLVM environment variables:
-ENV LLVM_DIR_BASE /llvm/release/llvm600
-ENV LLVM_VERSION 6.0.0
+ENV LLVM_VERSION 8.0.0
 
-ENV LLVM_DIR $LLVM_DIR_BASE/lib/cmake/llvm
-ENV CXX $LLVM_DIR_BASE/bin/clang++
-ENV CC $LLVM_DIR_BASE/bin/clang
+ENV LLVM_DIR usr/lib/llvm-8/cmake
+ENV CXX /usr/bin/clang++-8
+ENV CC /usr/bin/clang-8
 
 # Klee
 WORKDIR /deps/src/klee
@@ -147,7 +144,7 @@ RUN mkdir -p /deps/install/klee
 RUN mkdir build
 
 WORKDIR /deps/src/klee/build
-RUN cmake -DENABLE_SOLVER_METASMT=ON -DmetaSMT_DIR=/deps/install/metasmt/share/metaSMT/ -DENABLE_SOLVER_Z3=ON -DZ3_LIBRARIES=/deps/install/z3/lib/libz3.so -DZ3_INCLUDE_DIRS=/deps/install/z3/include -DENABLE_SOLVER_STP=ON -DKLEE_RUNTIME_BUILD_TYPE=Release -DENABLE_POSIX_RUNTIME=ON -DENABLE_KLEE_UCLIBC=ON -DKLEE_UCLIBC_PATH=/deps/install/klee_uclib/usr/x86_64-linux-uclibc/usr/ -DCMAKE_BUILD_TYPE=Release -DLLVM_CONFIG_BINARY=$LLVM_DIR_BASE/bin/llvm-config \
+RUN cmake -DENABLE_SOLVER_METASMT=ON -DmetaSMT_DIR=/deps/install/metasmt/share/metaSMT/ -DENABLE_SOLVER_Z3=ON -DZ3_LIBRARIES=/deps/install/z3/lib/libz3.so -DZ3_INCLUDE_DIRS=/deps/install/z3/include -DENABLE_SOLVER_STP=ON -DKLEE_RUNTIME_BUILD_TYPE=Release -DENABLE_POSIX_RUNTIME=ON -DENABLE_KLEE_UCLIBC=ON -DKLEE_UCLIBC_PATH=/deps/install/klee_uclib/usr/x86_64-linux-uclibc/usr/ -DCMAKE_BUILD_TYPE=Release -DLLVM_CONFIG_BINARY=/usr/bin/llvm-config-8 \
      -DENABLE_TCMALLOC=OFF -DENABLE_SYSTEM_TESTS=OFF -DENABLE_UNIT_TESTS=OFF -DCMAKE_INSTALL_PREFIX:PATH=/deps/install/klee -G Ninja ..
 RUN ninja install
 
