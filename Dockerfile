@@ -10,7 +10,7 @@
 #   $ docker run -it --name=base_build_mapdevel herberthb/base-image-map2check:v8 /bin/bash
 ############################################################
 
-# Base image with LLVM 6.0 builded
+# Base image with LLVM 8.0 builded
 FROM herberthb/llvm-docker-dev:v8
 
 # Image maintainer.
